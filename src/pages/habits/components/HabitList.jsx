@@ -13,10 +13,13 @@ import { Draggable } from "react-beautiful-dnd";
 import DroppableStrict from "@/components/DroppableStrict";
 import HabitItem from "./HabitItem";
 import HabitCreator from "./HabitCreator";
+import HabitDetail from "./HabitDetail";
 
 function HabitList({ title, data, ...rest }) {
   const id = title.split(/\s+/g).join("-");
+  const [detail, setDetail] = useState({});
   const createDisc = useDisclosure();
+  const detailDisc = useDisclosure();
 
   return (
     <>
@@ -40,6 +43,10 @@ function HabitList({ title, data, ...rest }) {
                     <HabitItem
                       name={item.name}
                       category={item.category}
+                      onClick={() => {
+                        setDetail(item);
+                        detailDisc.onOpen();
+                      }}
                       {...draggableProvided.dragHandleProps}
                       {...draggableProvided.draggableProps}
                       ref={draggableProvided.innerRef}
@@ -70,6 +77,11 @@ function HabitList({ title, data, ...rest }) {
         category={title}
         onClose={createDisc.onClose}
         isOpen={createDisc.isOpen}
+      />
+      <HabitDetail
+        data={detail}
+        onClose={detailDisc.onClose}
+        isOpen={detailDisc.isOpen}
       />
     </>
   );

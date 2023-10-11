@@ -26,7 +26,12 @@ const TextareaRef = React.forwardRef((props, ref) => (
 
 function HabitCreator({ isOpen, onClose, category }) {
   const { addHabit, getHabits } = useHabits();
-  const [data, setData] = useState({ category });
+  const [data, setData] = useState({
+    category,
+    description: "",
+    name: "",
+    base_score: 1,
+  });
   const ref = useRef();
 
   console.log(data);
@@ -49,12 +54,12 @@ function HabitCreator({ isOpen, onClose, category }) {
       isOpen={isOpen}
       onClose={() => {
         onClose();
-        setData({ category });
+        setData({ category, description: "", name: "", base_score: 1 });
       }}
     >
       <ModalOverlay />
       <ModalContent rounded={0}>
-        <ModalHeader>Add new habit</ModalHeader>
+        <ModalHeader>Add new {category.toLowerCase()} habit</ModalHeader>
         <ModalCloseButton rounded={0} />
         <ModalBody>
           <VStack w={"full"}>
@@ -64,6 +69,7 @@ function HabitCreator({ isOpen, onClose, category }) {
                 variant={"outline"}
                 rounded={0}
                 name="name"
+                autoComplete="false"
                 onChange={(e) =>
                   setData({ ...data, [e.target.name]: e.target.value })
                 }
@@ -77,6 +83,7 @@ function HabitCreator({ isOpen, onClose, category }) {
                 variant={"outline"}
                 rounded={0}
                 name="base_score"
+                autoComplete="false"
                 onChange={(e) =>
                   setData({ ...data, [e.target.name]: e.target.value })
                 }
@@ -89,6 +96,7 @@ function HabitCreator({ isOpen, onClose, category }) {
                 rounded={0}
                 name="description"
                 ref={ref}
+                autoComplete={"false"}
                 onChange={(e) =>
                   setData({ ...data, [e.target.name]: e.target.value })
                 }

@@ -1,33 +1,65 @@
 import { faker } from "@faker-js/faker";
 import { useQueryClient, useQuery, isError } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
 
 let fake_habits = [];
 let fake_stacks = [
   { data: [], name: "Positive", id: "positive" },
   { data: [], name: "Negative", id: "negative" },
 ];
-for (let i = 0; i < 10; i++) {
-  const item = {
-    id: faker.database.mongodbObjectId() + Date.now(),
-    name: [faker.word.verb(), faker.word.noun()].join(" "),
-    description: [
-      faker.word.preposition(),
-      faker.word.verb(),
-      faker.word.noun(),
-      faker.word.conjunction(),
-      faker.word.adjective(),
-    ].join(" "),
-    category: ["Positive", "Negative"][faker.number.int({ min: 0, max: 1 })],
-    baseScore: faker.number.int({ min: 1, max: 3 }),
-    currentScores: 0,
-  };
-  fake_habits.push(item);
-  fake_stacks[fake_stacks.findIndex((x) => x.name == item.category)].data.push({
-    id: item.id,
-    name: item.name,
-  });
-}
+
+fake_habits.push({
+  id: faker.database.mongodbObjectId(),
+  name: "🚶 Walk 1km",
+  description: "❌📱 Turn off the screen, \n🏡 and enjoy the outdoor",
+  category: "Positive",
+  base_score: 1,
+});
+fake_stacks[0].data.push(fake_habits[fake_habits.length - 1]);
+
+fake_habits.push({
+  id: faker.database.mongodbObjectId(),
+  name: "💪 Push up 10x",
+  description: "❌🛋️ Leave the comfy sofa, \n💪 and build up your strength",
+  category: "Positive",
+  base_score: 1,
+});
+fake_stacks[0].data.push(fake_habits[fake_habits.length - 1]);
+
+fake_habits.push({
+  id: faker.database.mongodbObjectId(),
+  name: "📘 Study for 30 minutes",
+  description: "❌🎮 Stop the game, \n🧠 and feed your brain",
+  category: "Positive",
+  base_score: 1,
+});
+fake_stacks[0].data.push(fake_habits[fake_habits.length - 1]);
+
+fake_habits.push({
+  id: faker.database.mongodbObjectId(),
+  name: "🥱 Sleep late",
+  description: "🥱 Staying up till midnight",
+  category: "Negative",
+  base_score: 1,
+});
+fake_stacks[1].data.push(fake_habits[fake_habits.length - 1]);
+
+fake_habits.push({
+  id: faker.database.mongodbObjectId(),
+  name: "🍕 Overeat",
+  description: "🍕 Yummer, eating my own feeling",
+  category: "Negative",
+  base_score: 1,
+});
+fake_stacks[1].data.push(fake_habits[fake_habits.length - 1]);
+
+fake_habits.push({
+  id: faker.database.mongodbObjectId(),
+  name: "🫣 Hey dopamine",
+  description: "🫣 Hey, what's your doing?",
+  category: "Negative",
+  base_score: 1,
+});
+fake_stacks[1].data.push(fake_habits[fake_habits.length - 1]);
 
 localStorage.setItem("habits", JSON.stringify(fake_habits));
 localStorage.setItem("stacks", JSON.stringify(fake_stacks));
@@ -67,13 +99,13 @@ export function useHabits() {
   });
 
   const getHabitById = (id) =>
-    useQuery({
-      queryKey: ["habits", "id", id],
-      queryFn: () => {
-        let habits = [...getHabits.data];
-        let index = habits.findIndex((x) => x.id == id);
-        return habits[index] || null;
-      },
+    new Promise((resolve, reject) => {
+      let habits = [...getHabits.data];
+      let indexH = habits.findIndex((x) => x.id == id);
+      if (indexH > -1) {
+        resolve(habits[indexH]);
+      }
+      reject(new Error("id not found!"));
     });
 
   const addHabit = (item) =>
@@ -96,43 +128,99 @@ export function useHabits() {
       resolve(item);
     });
 
-  const updateHabitByid = (item, id) =>
+  const removeHabitById = (id) =>
     new Promise((resolve, reject) => {
       let habits = [...getHabits.data];
       let stacks = [...getStacks.data];
-      let indexC = stacks.findIndex((x) => x.name == item.category);
-      if (indexC > -1) {
-        let indexH = habits.findIndex((x) => x.id == habits.id);
-        let indexS = stacks[indexC]?.data?.findIndex((x) => x.id == stacks.id);
-        if (!!indexH && !!indexS) {
-          habits = [
-            ...habits.slice(0, indexH),
-            item,
-            ...habits.slice(indexH + 1, habits.length),
-          ];
-          stacks = [
-            ...stacks.slice(0, indexC),
-            {
-              ...stacks[indexC],
-              data: [
-                ...stacks[indexC].data.slice(0, indexS),
-                item,
-                ...stacks[indexC].data.slice(
-                  indexS + 1,
-                  ...stacks[indexC].data.length,
-                ),
-              ],
-            },
-            ...stacks.slice(indexC + 1, stacks.length),
-          ];
+      let indexH = habits.findIndex((x) => x.id == id);
 
-          setHabits(habits);
-          setStacks(stacks);
-
-          resolve(item);
-        }
+      if (indexH == -1) {
         reject(new Error("id not found!"));
       }
+
+      let item = habits[indexH];
+      let indexC = stacks.findIndex((x) => x.name == item.category);
+
+      if (indexC == -1) {
+        reject(new Error("category not found!"));
+      }
+
+      let indexS = stacks[indexC]?.data?.findIndex((x) => x.id == id);
+
+      if (indexS == -1) {
+        reject(new Error("stack not found!"));
+      }
+
+      habits = [
+        ...habits.slice(0, indexH),
+        ...habits.slice(indexH + 1, habits.length),
+      ];
+
+      stacks = [
+        ...stacks.slice(0, indexC),
+        {
+          ...stacks[indexC],
+          data: [
+            ...stacks[indexC].data.slice(0, indexS),
+            ...stacks[indexC].data.slice(
+              indexS + 1,
+              stacks[indexC].data.length,
+            ),
+          ],
+        },
+        ...stacks.slice(indexC + 1, stacks.length),
+      ];
+
+      setHabits(habits);
+      setStacks(stacks);
+      resolve(id);
+    });
+
+  const updateHabitById = (item, id) =>
+    new Promise((resolve, reject) => {
+      let habits = [...getHabits.data];
+      let stacks = [...getStacks.data];
+
+      let indexH = habits.findIndex((x) => x.id == id);
+      if (indexH == -1) {
+        reject(new Error("id not found!"));
+      }
+
+      let indexC = stacks.findIndex((x) => x.name == item.category);
+      if (indexC == -1) {
+        reject(new Error("category not found!"));
+      }
+
+      let indexS = stacks[indexC]?.data?.findIndex((x) => x.id == id);
+      if (indexS == -1) {
+        reject(new Error("stack not found!"));
+      }
+
+      habits = [
+        ...habits.slice(0, indexH),
+        { ...habits[indexH], ...item },
+        ...habits.slice(indexH + 1, habits.length),
+      ];
+
+      stacks = [
+        ...stacks.slice(0, indexC),
+        {
+          ...stacks[indexC],
+          data: [
+            ...stacks[indexC].data.slice(0, indexS),
+            { id: id, name: item.name },
+            ...stacks[indexC].data.slice(
+              indexS + 1,
+              stacks[indexC].data.length,
+            ),
+          ],
+        },
+        ...stacks.slice(indexC + 1, stacks.length),
+      ];
+
+      setHabits(habits);
+      setStacks(stacks);
+      resolve(item);
     });
 
   const moveHabit = (
@@ -146,44 +234,46 @@ export function useHabits() {
       let indexStackSource = stacks.findIndex((x) => x.name == sourceCategory);
       let indexStackTarget = stacks.findIndex((x) => x.name == targetCategory);
       let item = stacks[indexStackSource].data[sourceIndex];
-      if (!!item) {
-        // UPDATE SOURCE STACKS
-        stacks = [
-          ...stacks.slice(0, indexStackSource),
-          {
-            ...stacks[indexStackSource],
-            data: [
-              ...stacks[indexStackSource].data.slice(0, sourceIndex),
-              ...stacks[indexStackSource].data.slice(
-                sourceIndex + 1,
-                stacks[indexStackSource].data.length,
-              ),
-            ],
-          },
-          ...stacks.slice(indexStackSource + 1, stacks.length),
-        ];
 
-        // UPDATE TARGET STACKS
-        stacks = [
-          ...stacks.slice(0, indexStackTarget),
-          {
-            ...stacks[indexStackTarget],
-            data: [
-              ...stacks[indexStackTarget].data.slice(0, targetindex),
-              item,
-              ...stacks[indexStackTarget].data.slice(
-                targetindex,
-                stacks[indexStackTarget].data.length,
-              ),
-            ],
-          },
-          ...stacks.slice(indexStackTarget + 1, stacks.length),
-        ];
-
-        setStacks(stacks);
-        resolve(item);
+      if (!item) {
+        reject(new Error("index not found!"));
       }
-      reject(new Error("index not found"));
+
+      // UPDATE SOURCE STACKS
+      stacks = [
+        ...stacks.slice(0, indexStackSource),
+        {
+          ...stacks[indexStackSource],
+          data: [
+            ...stacks[indexStackSource].data.slice(0, sourceIndex),
+            ...stacks[indexStackSource].data.slice(
+              sourceIndex + 1,
+              stacks[indexStackSource].data.length,
+            ),
+          ],
+        },
+        ...stacks.slice(indexStackSource + 1, stacks.length),
+      ];
+
+      // UPDATE TARGET STACKS
+      stacks = [
+        ...stacks.slice(0, indexStackTarget),
+        {
+          ...stacks[indexStackTarget],
+          data: [
+            ...stacks[indexStackTarget].data.slice(0, targetindex),
+            item,
+            ...stacks[indexStackTarget].data.slice(
+              targetindex,
+              stacks[indexStackTarget].data.length,
+            ),
+          ],
+        },
+        ...stacks.slice(indexStackTarget + 1, stacks.length),
+      ];
+
+      setStacks(stacks);
+      resolve(item);
     });
 
   return {
@@ -191,7 +281,8 @@ export function useHabits() {
     getHabitById,
     getStacks,
     addHabit,
-    updateHabitByid,
+    updateHabitById,
+    removeHabitById,
     moveHabit,
   };
 }

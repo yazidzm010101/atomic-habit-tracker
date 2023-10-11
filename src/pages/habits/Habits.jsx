@@ -3,6 +3,7 @@ import { faker } from "@faker-js/faker";
 import { Box, Container, Heading, Spacer, Text } from "@chakra-ui/react";
 import { getLocalizedString } from "@/hooks/useLocale";
 import HabitKanban from "./components/HabitKanban";
+import HabitSummary from "./components/HabitSummary";
 
 function Habits() {
   return (
@@ -13,7 +14,9 @@ function Habits() {
         </Heading>
         <Text>{getLocalizedString("desc_atomic_habit_1_explanation")}</Text>
       </Box>
-      <Spacer as={"hr"} my={8} />
+      <Spacer borderBottom={"3px dotted"} borderColor={"gray.400"} my={8} />
+      <HabitSummary />
+      <Spacer my={8} />
       <HabitKanban />
     </Container>
   );
