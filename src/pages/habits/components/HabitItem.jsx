@@ -1,19 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import {
-  Box,
-  Button,
-  HStack,
-  Icon,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Button, HStack, Icon, Text } from "@chakra-ui/react";
 import { PiMinus, PiPlus } from "react-icons/pi";
 
 const HabitItem = React.forwardRef(
   ({ name, category, baseScore, currentScores, reasoning, ...rest }, ref) => {
-    let curRef = useRef(null);
-    useEffect(() => {
-      curRef = ref;
-    });
     return (
       <Box
         pos={"relative"}
@@ -45,7 +35,7 @@ const HabitItem = React.forwardRef(
         </HStack>
       </Box>
     );
-  }
+  },
 );
 
-export default HabitItem
+export default HabitItem;
