@@ -11,7 +11,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTask } from "@/hooks/useTask";
 
@@ -36,13 +36,14 @@ function GroupCreator({ isOpen, onClose }) {
         <ModalHeader>Add new task group</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack>
-            <VStack>
+          <VStack w={"full"}>
+            <VStack w={"full"} alignItems={"start"}>
               <Text>Name</Text>
               <Input
                 rounded={0}
                 value={data.name}
                 name="name"
+                autoComplete={"false"}
                 onChange={(e) =>
                   setData({ ...data, [e.target.name]: e.target.value })
                 }
@@ -51,7 +52,9 @@ function GroupCreator({ isOpen, onClose }) {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onSubmit}>Add</Button>
+          <Button rounded={0} onClick={onSubmit}>
+            Add
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

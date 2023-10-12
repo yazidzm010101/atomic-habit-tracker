@@ -1,6 +1,8 @@
 import {
   Button,
   HStack,
+  Heading,
+  Icon,
   Input,
   Modal,
   ModalBody,
@@ -16,51 +18,10 @@ import {
 import { useEffect, useState } from "react";
 
 import { DragDropContext } from "react-beautiful-dnd";
+import GroupCreator from "./GroupCreator";
+import { PiPlusBold } from "react-icons/pi";
 import TaskList from "./TaskList";
 import { useTask } from "@/hooks/useTask";
-
-function GroupCreator({ isOpen, onClose }) {
-  const { addGroup } = useTask();
-  const [data, setData] = useState({ name: "", task: [] });
-
-  const onSubmit = () => {
-    addGroup(data);
-    onClose();
-  };
-
-  useEffect(() => {
-    if (!isOpen) {
-      setData({ name: "", task: [] });
-    }
-  }, [isOpen]);
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent rounded={0}>
-        <ModalHeader>Add new task group</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack>
-            <VStack>
-              <Text>Name</Text>
-              <Input
-                rounded={0}
-                value={data.name}
-                name="name"
-                onChange={(e) =>
-                  setData({ ...data, [e.target.name]: e.target.value })
-                }
-              />
-            </VStack>
-          </VStack>
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onSubmit}>Add</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
 
 function GroupList() {
   const {
@@ -77,19 +38,19 @@ function GroupList() {
 
   return (
     <VStack alignItems={"start"}>
-      <Button rounded={0} onClick={createDisc.onOpen} variant={"outline"}>
-        Add group
-      </Button>
       <HStack
-        spacing={0}
+        spacing={4}
         w={"full"}
         alignItems={"stretch"}
         overflowX={"auto"}
         flexWrap={"nowrap"}
+        minH={"60vh"}
+        py={2}
       >
         <DragDropContext onDragEnd={onDragEnd}>
           {data?.map((item) => (
             <TaskList
+              flexShrink={0}
               key={item.id}
               id={item.id}
               title={item.name}
@@ -98,6 +59,24 @@ function GroupList() {
             />
           ))}
         </DragDropContext>
+        <Button
+          flexShrink={0}
+          my={-2}
+          rounded={0}
+          border={"1px dashed"}
+          borderColor={"rgb(0 0 0 / 0)"}
+          _hover={{
+            borderColor: "rgb(0 0 0 / 0.1)",
+          }}
+          onClick={createDisc.onOpen}
+          variant={"outline"}
+          w={{ base: "full", md: "300px" }}
+          rightIcon={<Icon w={6} h={6} as={PiPlusBold} />}
+        >
+          <Heading fontSize={"xl"} textAlign={"start"} w={"full"}>
+            Add group
+          </Heading>
+        </Button>
       </HStack>
       <GroupCreator isOpen={createDisc.isOpen} onClose={createDisc.onClose} />
     </VStack>
