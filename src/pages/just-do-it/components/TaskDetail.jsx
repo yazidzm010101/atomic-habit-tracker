@@ -1,4 +1,3 @@
-import { useHabits } from "@/hooks/useHabits";
 import {
   Button,
   Fade,
@@ -11,15 +10,16 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Portal,
-  ScaleFade,
   Text,
   Textarea,
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import autosize from "autosize";
 import React, { useEffect, useRef, useState } from "react";
+
+import FocusMode from "./FocusMode";
+import autosize from "autosize";
+import { useTask } from "@/hooks/useTask";
 
 const TextareaRef = React.forwardRef((props, ref) => (
   <Textarea {...props} ref={ref}>
@@ -27,33 +27,36 @@ const TextareaRef = React.forwardRef((props, ref) => (
   </Textarea>
 ));
 
-function HabitDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
-  const { updateHabitById, getHabitById, removeHabitById, getHabits } =
-    useHabits();
+function TaskDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
+  const { updateTaskById, getTaskById, removeTaskById, getGroups } = useTask();
+
   const [data, setData] = useState({
     name: "",
-    base_score: 1,
+    is_done: false,
     description: "",
   });
+
   const [editMode, setEditMode] = useState(false);
   const deleteDisc = useDisclosure();
+  const focusModeDisc = useDisclosure();
   const ref = useRef();
 
   const onSubmit = () => {
-    updateHabitById(data, data.id);
-    getHabits.refetch();
+    updateTaskById(data, data.id);
+    getGroups.refetch();
     onClose();
   };
 
   const onClose = () => {
+    focusModeDisc.onClose();
     setEditMode(false);
     setData({});
     onCloseFn();
   };
 
   const onRemove = () => {
-    removeHabitById(data.id);
-    getHabits.refetch();
+    removeTaskById(data.id);
+    getGroups.refetch();
     deleteDisc.onClose();
     onClose();
   };
@@ -66,10 +69,10 @@ function HabitDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
   }, []);
 
   useEffect(() => {
-    if (!!initialData && !!initialData.id) {
-      getHabitById(initialData.id).then((resp) => setData(resp));
+    if (isOpen && initialData?.id) {
+      getTaskById(initialData.id).then((success) => setData(success));
     }
-  }, [initialData]);
+  }, [isOpen]);
 
   return (
     <>
@@ -81,28 +84,12 @@ function HabitDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
           <ModalBody>
             <VStack w={"full"}>
               <VStack w={"full"} alignItems={"start"}>
-                <Text>Habit</Text>
+                <Text>Task</Text>
                 <Input
                   variant={"outline"}
                   rounded={0}
                   name="name"
-                  value={data.name}
-                  disabled={!editMode}
-                  _disabled={{ opacity: 1 }}
-                  onChange={(e) =>
-                    setData({ ...data, [e.target.name]: e.target.value })
-                  }
-                />
-              </VStack>
-              <VStack w={"full"} alignItems={"start"}>
-                <Text>Base Score</Text>
-                <Input
-                  type="number"
-                  min={1}
-                  variant={"outline"}
-                  rounded={0}
-                  name="base_score"
-                  value={data.base_score}
+                  value={data.name || ""}
                   disabled={!editMode}
                   _disabled={{ opacity: 1 }}
                   onChange={(e) =>
@@ -116,7 +103,7 @@ function HabitDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
                   variant={"outline"}
                   rounded={0}
                   name="description"
-                  value={data.description}
+                  value={data.description || ""}
                   disabled={!editMode}
                   _disabled={{ opacity: 1 }}
                   ref={ref}
@@ -158,16 +145,21 @@ function HabitDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
                 </Button>
               </HStack>
             )) || (
-              <Button
-                rounded={0}
-                bg={"yellow.600"}
-                color={"white"}
-                colorScheme="yellow"
-                variant={"solid"}
-                onClick={() => setEditMode(true)}
-              >
-                Edit
-              </Button>
+              <HStack w={"full"}>
+                <Button rounded={0} mr={"auto"} onClick={focusModeDisc.onOpen}>
+                  Focus Mode
+                </Button>
+                <Button
+                  rounded={0}
+                  bg={"yellow.600"}
+                  color={"white"}
+                  colorScheme="yellow"
+                  variant={"solid"}
+                  onClick={() => setEditMode(true)}
+                >
+                  Edit
+                </Button>
+              </HStack>
             )}
           </ModalFooter>
         </ModalContent>
@@ -193,8 +185,13 @@ function HabitDetail({ isOpen, onClose: onCloseFn, data: initialData }) {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <FocusMode
+        id={data.id}
+        isOpen={focusModeDisc.isOpen}
+        onClose={focusModeDisc.onClose}
+      />
     </>
   );
 }
 
-export default HabitDetail;
+export default TaskDetail;

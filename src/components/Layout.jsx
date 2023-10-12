@@ -1,5 +1,3 @@
-import React from "react";
-
 import {
   Box,
   Container,
@@ -11,18 +9,18 @@ import {
 } from "@chakra-ui/react";
 import { Outlet, Link as ReactLink, useLocation } from "react-router-dom";
 import {
-  PiHandFist,
-  PiUserList,
-  PiMedal,
-  PiChartBar,
-  PiUserListDuotone,
-  PiHandFistDuotone,
-  PiMedalDuotone,
   PiChairDuotone,
+  PiChartBar,
+  PiHandFist,
+  PiHandFistDuotone,
+  PiMedal,
+  PiMedalDuotone,
+  PiUserList,
+  PiUserListDuotone,
 } from "react-icons/pi";
 
-import route from "@/configs/route";
 import { getLocalizedString } from "@/hooks/useLocale";
+import route from "@/configs/route";
 
 function Layout() {
   return (

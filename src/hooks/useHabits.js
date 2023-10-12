@@ -1,279 +1,175 @@
-import { faker } from "@faker-js/faker";
-import { useQueryClient, useQuery, isError } from "@tanstack/react-query";
-
-let fake_habits = [];
-let fake_stacks = [
-  { data: [], name: "Positive", id: "positive" },
-  { data: [], name: "Negative", id: "negative" },
-];
-
-fake_habits.push({
-  id: faker.database.mongodbObjectId(),
-  name: "🚶 Walk 1km",
-  description: "❌📱 Turn off the screen, \n🏡 and enjoy the outdoor",
-  category: "Positive",
-  base_score: 1,
-});
-fake_stacks[0].data.push(fake_habits[fake_habits.length - 1]);
-
-fake_habits.push({
-  id: faker.database.mongodbObjectId(),
-  name: "💪 Push up 10x",
-  description: "❌🛋️ Leave the comfy sofa, \n💪 and build up your strength",
-  category: "Positive",
-  base_score: 1,
-});
-fake_stacks[0].data.push(fake_habits[fake_habits.length - 1]);
-
-fake_habits.push({
-  id: faker.database.mongodbObjectId(),
-  name: "📘 Study for 30 minutes",
-  description: "❌🎮 Stop the game, \n🧠 and feed your brain",
-  category: "Positive",
-  base_score: 1,
-});
-fake_stacks[0].data.push(fake_habits[fake_habits.length - 1]);
-
-fake_habits.push({
-  id: faker.database.mongodbObjectId(),
-  name: "🥱 Sleep late",
-  description: "🥱 Staying up till midnight",
-  category: "Negative",
-  base_score: 1,
-});
-fake_stacks[1].data.push(fake_habits[fake_habits.length - 1]);
-
-fake_habits.push({
-  id: faker.database.mongodbObjectId(),
-  name: "🍕 Overeat",
-  description: "🍕 Yummer, eating my own feeling",
-  category: "Negative",
-  base_score: 1,
-});
-fake_stacks[1].data.push(fake_habits[fake_habits.length - 1]);
-
-fake_habits.push({
-  id: faker.database.mongodbObjectId(),
-  name: "🫣 Hey dopamine",
-  description: "🫣 Hey, what's your doing?",
-  category: "Negative",
-  base_score: 1,
-});
-fake_stacks[1].data.push(fake_habits[fake_habits.length - 1]);
-
-localStorage.setItem("habits", JSON.stringify(fake_habits));
-localStorage.setItem("stacks", JSON.stringify(fake_stacks));
+import { habit_tracker } from "./useIDB";
+import { useQuery } from "@tanstack/react-query";
 
 export function useHabits() {
   const query = ["habits"];
   const queryStack = ["habits", "stacks"];
 
-  const client = useQueryClient();
-
   const getHabits = useQuery({
     queryKey: query,
-    queryFn: () => JSON.parse(localStorage.getItem("habits") || "[]"),
-    initialData: fake_habits,
+    queryFn: () =>
+      new Promise((resolve, reject) => {
+        habit_tracker
+          .then((db) => {
+            db.getAll("habit_list")
+              .then((data) => resolve(data))
+              .catch((err) => reject(err));
+          })
+          .catch((err) => reject(err));
+      }),
     cacheTime: Infinity,
     staleTime: Infinity,
   });
 
-  const setHabits = (habits) => {
-    localStorage.setItem("habits", JSON.stringify(habits));
-    client.setQueryData(query, habits);
-    getHabits.refetch();
-  };
-
-  const setStacks = (stacks) => {
-    localStorage.setItem("stacks", JSON.stringify(stacks));
-    client.setQueryData(queryStack, stacks);
-    getStacks.refetch();
-  };
-
   const getStacks = useQuery({
     queryKey: queryStack,
-    queryFn: () => JSON.parse(localStorage.getItem("stacks") || "[]"),
-    initialData: fake_stacks,
+    queryFn: () =>
+      new Promise((resolve, reject) => {
+        habit_tracker
+          .then((db) => {
+            db.getAll("habit_group")
+              .then((data) =>
+                resolve(data.sort((a, b) => (a.order > b.order ? 1 : -1))),
+              )
+              .catch((err) => reject(err));
+          })
+          .catch((err) => reject(err));
+      }),
     cacheTime: Infinity,
     staleTime: Infinity,
   });
 
   const getHabitById = (id) =>
-    new Promise((resolve, reject) => {
-      let habits = [...getHabits.data];
-      let indexH = habits.findIndex((x) => x.id == id);
-      if (indexH > -1) {
-        resolve(habits[indexH]);
-      }
-      reject(new Error("id not found!"));
+    new Promise(async (resolve, reject) => {
+      const db = await habit_tracker;
+      db.get("habit_list", id)
+        .then((data) => resolve(data))
+        .catch((err) => reject(err));
     });
 
   const addHabit = (item) =>
-    new Promise((resolve, reject) => {
-      let habits = [...getHabits.data];
-      let stacks = [...getStacks.data];
-      let id = faker.database.mongodbObjectId + Date.now();
+    new Promise(async (resolve, reject) => {
+      const db = await habit_tracker;
+      const id = await db.add("habit_list", item);
+      const group = await db.get("habit_group", item.category);
+      await db.put("habit_group", {
+        ...group,
+        habits: [...group.habits, { id: id, name: item.name }],
+      });
 
-      let indexC = stacks.findIndex((x) => x.name == item.category);
-      if (indexC == -1) {
-        reject("Invalid habit category!");
-      }
-
-      habits.push({ ...item, id });
-      stacks[indexC].data.push({ ...item, id });
-
-      setHabits(habits);
-      setStacks(stacks);
-
-      resolve(item);
+      getHabits.refetch();
+      getStacks.refetch();
+      resolve({ ...item, id });
     });
 
   const removeHabitById = (id) =>
-    new Promise((resolve, reject) => {
-      let habits = [...getHabits.data];
-      let stacks = [...getStacks.data];
-      let indexH = habits.findIndex((x) => x.id == id);
+    new Promise(async (resolve, reject) => {
+      const db = await habit_tracker;
+      const habit = await db.get("habit_list", id);
+      const { habits: habitIDs, ...group } = await db.get(
+        "habit_group",
+        habit.category,
+      );
+      const index = (habitIDs || []).findIndex((x) => x.id == id);
 
-      if (indexH == -1) {
-        reject(new Error("id not found!"));
-      }
-
-      let item = habits[indexH];
-      let indexC = stacks.findIndex((x) => x.name == item.category);
-
-      if (indexC == -1) {
-        reject(new Error("category not found!"));
-      }
-
-      let indexS = stacks[indexC]?.data?.findIndex((x) => x.id == id);
-
-      if (indexS == -1) {
-        reject(new Error("stack not found!"));
-      }
-
-      habits = [
-        ...habits.slice(0, indexH),
-        ...habits.slice(indexH + 1, habits.length),
-      ];
-
-      stacks = [
-        ...stacks.slice(0, indexC),
-        {
-          ...stacks[indexC],
-          data: [
-            ...stacks[indexC].data.slice(0, indexS),
-            ...stacks[indexC].data.slice(
-              indexS + 1,
-              stacks[indexC].data.length,
-            ),
+      if (index > -1) {
+        await db.put("habit_group", {
+          ...group,
+          habits: [
+            ...habitIDs.slice(0, index),
+            ...habitIDs.slice(index + 1, habitIDs.length),
           ],
-        },
-        ...stacks.slice(indexC + 1, stacks.length),
-      ];
+        });
+      }
 
-      setHabits(habits);
-      setStacks(stacks);
-      resolve(id);
+      await db.delete("habit_list", id);
+
+      getHabits.refetch();
+      getStacks.refetch();
+      resolve(habit);
     });
 
   const updateHabitById = (item, id) =>
-    new Promise((resolve, reject) => {
-      let habits = [...getHabits.data];
-      let stacks = [...getStacks.data];
+    new Promise(async (resolve, reject) => {
+      const db = await habit_tracker;
+      const habit = await db.get("habit_list", id);
+      const { habits: habitIDS, ...group } = await db.get(
+        "habit_group",
+        habit.category,
+      );
+      const index = (habitIDS || []).findIndex((x) => x.id == id);
 
-      let indexH = habits.findIndex((x) => x.id == id);
-      if (indexH == -1) {
-        reject(new Error("id not found!"));
-      }
-
-      let indexC = stacks.findIndex((x) => x.name == item.category);
-      if (indexC == -1) {
-        reject(new Error("category not found!"));
-      }
-
-      let indexS = stacks[indexC]?.data?.findIndex((x) => x.id == id);
-      if (indexS == -1) {
-        reject(new Error("stack not found!"));
-      }
-
-      habits = [
-        ...habits.slice(0, indexH),
-        { ...habits[indexH], ...item },
-        ...habits.slice(indexH + 1, habits.length),
-      ];
-
-      stacks = [
-        ...stacks.slice(0, indexC),
-        {
-          ...stacks[indexC],
-          data: [
-            ...stacks[indexC].data.slice(0, indexS),
+      if (index > -1) {
+        await db.put("habit_group", {
+          ...group,
+          habits: [
+            ...habitIDS.slice(0, index),
             { id: id, name: item.name },
-            ...stacks[indexC].data.slice(
-              indexS + 1,
-              stacks[indexC].data.length,
-            ),
+            ...habitIDS.slice(index + 1, habitIDS.length),
           ],
-        },
-        ...stacks.slice(indexC + 1, stacks.length),
-      ];
+        });
+      }
 
-      setHabits(habits);
-      setStacks(stacks);
-      resolve(item);
+      await db.put("habit_list", habit);
+
+      getHabits.refetch();
+      getStacks.refetch();
+      resolve(habit);
     });
 
   const moveHabit = (
     sourceCategory,
     sourceIndex,
     targetCategory,
-    targetindex,
+    targetIndex,
   ) =>
-    new Promise((resolve, reject) => {
-      let stacks = [...getStacks.data];
-      let indexStackSource = stacks.findIndex((x) => x.name == sourceCategory);
-      let indexStackTarget = stacks.findIndex((x) => x.name == targetCategory);
-      let item = stacks[indexStackSource].data[sourceIndex];
+    new Promise(async (resolve, reject) => {
+      const db = await habit_tracker;
 
-      if (!item) {
-        reject(new Error("index not found!"));
+      const { habits: habits_source, ...group_source } = await db.get(
+        "habit_group",
+        sourceCategory,
+      );
+
+      const habit_group_source = habits_source[sourceIndex];
+      if (!habit_group_source) {
+        reject(new Error("habit not found!"));
       }
 
-      // UPDATE SOURCE STACKS
-      stacks = [
-        ...stacks.slice(0, indexStackSource),
-        {
-          ...stacks[indexStackSource],
-          data: [
-            ...stacks[indexStackSource].data.slice(0, sourceIndex),
-            ...stacks[indexStackSource].data.slice(
-              sourceIndex + 1,
-              stacks[indexStackSource].data.length,
-            ),
-          ],
-        },
-        ...stacks.slice(indexStackSource + 1, stacks.length),
-      ];
+      const habit_source = await db.get("habit_list", habit_group_source.id);
 
-      // UPDATE TARGET STACKS
-      stacks = [
-        ...stacks.slice(0, indexStackTarget),
-        {
-          ...stacks[indexStackTarget],
-          data: [
-            ...stacks[indexStackTarget].data.slice(0, targetindex),
-            item,
-            ...stacks[indexStackTarget].data.slice(
-              targetindex,
-              stacks[indexStackTarget].data.length,
-            ),
-          ],
-        },
-        ...stacks.slice(indexStackTarget + 1, stacks.length),
-      ];
+      await db.put("habit_list", {
+        ...habit_source,
+        category: targetCategory,
+      });
+      await db.put("habit_group", {
+        ...group_source,
+        habits: [
+          ...habits_source.slice(0, sourceIndex),
+          ...habits_source.slice(sourceIndex + 1, habit_source.length),
+        ],
+      });
 
-      setStacks(stacks);
-      resolve(item);
+      const { habits: habits_target, ...group_target } = await db.get(
+        "habit_group",
+        targetCategory,
+      );
+
+      await db.put("habit_group", {
+        ...group_target,
+        habits: [
+          ...habits_target.slice(0, targetIndex),
+          { id: habit_source.id, name: habit_source.name },
+          ...habits_target.slice(targetIndex, targetIndex.length),
+        ],
+      });
+
+      getHabits.refetch();
+      getStacks.refetch();
+      resolve({
+        ...habit_source,
+        category: targetCategory,
+      });
     });
 
   return {

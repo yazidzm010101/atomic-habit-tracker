@@ -1,5 +1,3 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { faker } from "@faker-js/faker";
 import {
   HStack,
   Heading,
@@ -8,15 +6,16 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import { PiPlus } from "react-icons/pi";
+
 import { Draggable } from "react-beautiful-dnd";
 import DroppableStrict from "@/components/DroppableStrict";
-import HabitItem from "./HabitItem";
-import HabitCreator from "./HabitCreator";
-import HabitDetail from "./HabitDetail";
+import { PiPlus } from "react-icons/pi";
+import TaskCreator from "./TaskCreator";
+import TaskDetail from "./TaskDetail";
+import TaskItem from "./TaskItem";
+import { useState } from "react";
 
-function HabitList({ title, data, ...rest }) {
-  const id = title.split(/\s+/g).join("-");
+function TaskList({ id, title, data, ...rest }) {
   const [detail, setDetail] = useState({});
   const createDisc = useDisclosure();
   const detailDisc = useDisclosure();
@@ -27,7 +26,7 @@ function HabitList({ title, data, ...rest }) {
         <Heading fontSize={"xl"} alignSelf={"flex-start"} mb={3} as={"h5"}>
           {title}
         </Heading>
-        <DroppableStrict droppableId={id}>
+        <DroppableStrict droppableId={String(id)}>
           {(droppableProvided) => (
             <VStack
               spacing={3}
@@ -44,9 +43,10 @@ function HabitList({ title, data, ...rest }) {
                   index={i}
                 >
                   {(draggableProvided, draggableSnapshot) => (
-                    <HabitItem
+                    <TaskItem
+                      id={item.id}
                       name={item.name}
-                      category={item.category}
+                      isDone={item.is_done}
                       onClick={() => {
                         setDetail(item);
                         detailDisc.onOpen();
@@ -73,18 +73,19 @@ function HabitList({ title, data, ...rest }) {
                 onClick={createDisc.onOpen}
               >
                 <Icon as={PiPlus} w={4} h={4} />
-                <Text maxW={"max-content"}>Add new habit</Text>
+                <Text maxW={"max-content"}>Add new task</Text>
               </HStack>
             </VStack>
           )}
         </DroppableStrict>
       </VStack>
-      <HabitCreator
+      <TaskCreator
         category={title}
+        groupId={id}
         onClose={createDisc.onClose}
         isOpen={createDisc.isOpen}
       />
-      <HabitDetail
+      <TaskDetail
         data={detail}
         onClose={detailDisc.onClose}
         isOpen={detailDisc.isOpen}
@@ -93,4 +94,4 @@ function HabitList({ title, data, ...rest }) {
   );
 }
 
-export default HabitList;
+export default TaskList;

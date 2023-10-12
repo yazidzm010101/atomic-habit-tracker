@@ -1,9 +1,9 @@
-import { Route, Routes, Navigate } from "react-router-dom";
-import route from "@/configs/route";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import React from "react";
-import Layout from "@/components/Layout";
 import Habits from "@/pages/habits/Habits";
+import JustDoIt from "@/pages/just-do-it/JustDoIt";
+import Layout from "@/components/Layout";
+import route from "@/configs/route";
 
 function Router() {
   return (
@@ -11,6 +11,7 @@ function Router() {
       <Route path={"/"} element={<Layout />}>
         <Route index element={<Navigate to={route.habits} />} />
         <Route path={route.habits} element={<Habits />} />
+        <Route path={route.just_do_it} element={<JustDoIt />} />
       </Route>
     </Routes>
   );

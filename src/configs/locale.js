@@ -9,18 +9,18 @@ const config = {
     desc_atomic_habit_1_explanation:
       "Menjadi sadar dengan kebiasaan anda merupakan langkah awal untuk mengambil alih kembali kendali dari kehidupan anda dan keluar dari mode autopilot.",
 
-    desc_atomit_habit_2:
+    desc_atomic_habit_2:
       "Setiap keputusan yang anda lakukan berkesinambungan dengan keputusan anda sebelumnya",
-    desc_atomit_habit_2_explanation:
+    desc_atomic_habit_2_explanation:
       "Anda dapat membuat daftar pekerjaan yang harus diselesaikan, dengan fitur focus mode anda dapat memberikan prioritas setiap task untuk mengurangi distraksi dari task yang lain",
 
-    desc_atomit_habit_3:
+    desc_atomic_habit_3:
       "Kenikmatan akan terasa memuaskan ketika anda menyelesaikan kewajiban anda",
-    desc_atomit_habit_3_explanation: "",
+    desc_atomic_habit_3_explanation: "",
 
-    desc_atomit_habit_4:
+    desc_atomic_habit_4:
       "Mencatat perubahan yang terjadi pada diri anda merupakan cara yang baik untuk terus berkaca dan belajar dari kesalahan",
-    desc_atomit_habit_4_explanation:
+    desc_atomic_habit_4_explanation:
       "Fitur ini mencatat secara otomatis kebiasaan dan pekerjaan yang anda selesaikan secara progresif untuk membantu anda lebih sadar dengan perubahan yang terjadi pada diri anda.",
 
     about_page:
@@ -39,16 +39,16 @@ const config = {
     desc_atomic_habit_1_explanation:
       "By becoming aware of your own habits is the first step to take back the control of your life and be free from autopilot mode",
 
-    desc_atomit_habit_2: "Each decision is corellated from previous decision",
-    desc_atomit_habit_2_explanation:
+    desc_atomic_habit_2: "Each decision is corellated from previous decision",
+    desc_atomic_habit_2_explanation:
       "You can make a list of task that had to be done, with focus mode feature you can prioritize your task easily to remove distraction for your own other tasks",
 
-    desc_atomit_habit_4: "The greatest pleasure comes when your duty is done",
-    desc_atomit_habit_3_explanation: "",
+    desc_atomic_habit_4: "The greatest pleasure comes when your duty is done",
+    desc_atomic_habit_3_explanation: "",
 
-    desc_atomit_habit_4:
+    desc_atomic_habit_4:
       "To keep track of what changes in yourself is a good way to keep reflecting and learn from our own mistakes",
-    desc_atomit_habit_4_explanation:
+    desc_atomic_habit_4_explanation:
       "This feature automatically record your habits and task that you comitted progressively to help you be more aware of your own progress in life.",
 
     about_page:
