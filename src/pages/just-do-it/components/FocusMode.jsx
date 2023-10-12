@@ -6,6 +6,7 @@ import {
   Icon,
   Portal,
   ScaleFade,
+  Spacer,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -214,6 +215,24 @@ function FocusMode({ isOpen, onClose, id }) {
                 Done
               </Button>
             </HStack>
+            <VStack w={"400px"} spacing={0} my={10}>
+              {[...timer?.data].reverse().map((timer_record, i) => (
+                <>
+                  <HStack w={"full"}>
+                    <Text w={4} flexShrink={0}>
+                      {timer.data.length - i}
+                    </Text>
+                    <Text flexGrow={1} textAlign={"center"}>
+                      {
+                        convertMsToTime(timer_record.end - timer_record.start)
+                          .fulltext
+                      }
+                    </Text>
+                  </HStack>
+                  {i != timer.data.length - 1 && <Spacer as="hr" my={2} />}
+                </>
+              ))}
+            </VStack>
           </VStack>
         </Box>
       </FullScreen>

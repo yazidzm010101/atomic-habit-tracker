@@ -14,8 +14,8 @@ export function convertMsToTime(milliseconds) {
 
   hours = hours % 24;
 
-  //   return `${padTo2Digits(hours)}:${padTo2Digits(minutes)}:${padTo2Digits(
-  //     seconds
-  //   )}`;
-  return { hours, minutes, seconds };
+  let fulltext = `${padTo2Digits(hours)}:${padTo2Digits(
+    minutes,
+  )}:${padTo2Digits(seconds)}`;
+  return { hours, minutes, seconds, fulltext };
 }

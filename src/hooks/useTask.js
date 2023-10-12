@@ -87,7 +87,11 @@ export function useTask() {
       const task = await db.get("task_list", id);
       const group = await db.get("task_group", task.group_id);
       const indexG = group.tasks.findIndex((x) => x.id == task.id);
-      await db.put("task_list", { ...task, is_done: !task.is_done });
+      await db.put("task_list", {
+        ...task,
+        is_done: !task.is_done,
+        timer: { ...task.timer, status: (task.is_done && "stopped") || "done" },
+      });
       await db.put("task_group", {
         ...group,
         tasks: [
