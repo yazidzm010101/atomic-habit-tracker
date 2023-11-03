@@ -5,8 +5,14 @@ import Habits from "@/pages/habits/Habits";
 import JustDoIt from "@/pages/just-do-it/JustDoIt";
 import Layout from "@/components/Layout";
 import route from "@/configs/route";
+import { useColorMode } from "@chakra-ui/react";
+import { useEffect } from "react";
 
 function Router() {
+  const { setColorMode } = useColorMode();
+  useEffect(() => {
+    setColorMode("light")
+  }, [])
   return (
     <Routes>
       <Route path={"/"} element={<Layout />}>
